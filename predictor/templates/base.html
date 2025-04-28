@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}The Book Beacon{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+            --header-bg: linear-gradient(90deg, #6366f1 0%, #38bdf8 100%);
+            --header-color: #fff;
+            --card-bg: rgba(255,255,255,0.85);
+            --glass-bg: rgba(255,255,255,0.65);
+            --text-main: #22223b;
+            --accent: #6366f1;
+            --accent2: #38bdf8;
+        }
+        html, body {
+            font-family: 'Inter', Arial, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+        }
+        .app-header {
+            background: var(--header-bg);
+            border-radius: 0 0 1.5rem 1.5rem;
+            box-shadow: 0 4px 24px rgba(99,102,241,0.10);
+            padding: 2.2rem 0 1.2rem 0;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .app-header .bi {
+            font-size: 2.7rem;
+            color: #fff;
+            vertical-align: middle;
+            filter: drop-shadow(0 2px 8px #6366f1cc);
+        }
+        .app-title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--header-color);
+            margin-left: 0.7rem;
+            vertical-align: middle;
+            letter-spacing: 0.03em;
+            text-shadow: 0 2px 8px #6366f1cc;
+        }
+        .centered-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+        }
+        .card, .genre-desc-box, .recommend-list li, .author-books-list li, .book-info-box {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 24px rgba(99,102,241,0.10);
+            border-radius: 1.2em !important;
+        }
+        .dark-toggle {
+            position: absolute;
+            right: 2rem;
+            top: 2rem;
+            background: none;
+            border: none;
+            font-size: 1.7rem;
+            color: #fff;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .dark-toggle:hover {
+            color: #e0e7ff;
+        }
+        body.dark-mode {
+            --bg-main: #18181b;
+            --bg-gradient: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+            --header-bg: linear-gradient(90deg, #232336 0%, #6366f1 100%);
+            --header-color: #e0e7ef;
+            --card-bg: rgba(35,35,54,0.85);
+            --glass-bg: rgba(35,35,54,0.65);
+            --text-main: #e0e7ef;
+        }
+        body.dark-mode, body.dark-mode .app-title {
+            color: var(--text-main);
+        }
+        body.dark-mode .app-header .bi {
+            color: #e0e7ef;
+        }
+        body.dark-mode .card, body.dark-mode .genre-desc-box, body.dark-mode .recommend-list li, body.dark-mode .author-books-list li, body.dark-mode .book-info-box {
+            background: var(--glass-bg) !important;
+            color: var(--text-main) !important;
+        }
+        body.dark-mode .genre-desc-box {
+            border-left: 5px solid #818cf8;
+        }
+        @media (max-width: 600px) {
+            .app-title { font-size: 1.3rem; }
+            .app-header .bi { font-size: 1.5rem; }
+            .centered-content { min-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header text-center">
+        <i class="bi bi-broadcast"></i>
+        <span class="app-title">The Book Beacon</span>
+        <button class="dark-toggle" id="darkToggle" title="Toggle dark mode">
+            <i class="bi bi-moon-stars-fill" id="darkIcon"></i>
+        </button>
+    </div>
+    <div class="centered-content">
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+        // Dark mode toggle logic
+        const toggleBtn = document.getElementById('darkToggle');
+        const icon = document.getElementById('darkIcon');
+        function setDarkMode(on) {
+            if (on) {
+                document.body.classList.add('dark-mode');
+                icon.classList.remove('bi-moon-stars-fill');
+                icon.classList.add('bi-brightness-high-fill');
+            } else {
+                document.body.classList.remove('dark-mode');
+                icon.classList.remove('bi-brightness-high-fill');
+                icon.classList.add('bi-moon-stars-fill');
+            }
+        }
+        // Load preference
+        const darkPref = localStorage.getItem('darkMode') === 'true';
+        setDarkMode(darkPref);
+        toggleBtn.onclick = () => {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            setDarkMode(isDark);
+        };
+    </script>
+</body>
+</html>

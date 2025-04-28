@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Genre Predictor</title>
+</head>
+<body>
+    <h1>Book Genre Predictor</h1>
+    
+    <form id="predictForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="synopsis">Synopsis:</label>
+        <textarea id="synopsis" name="synopsis" required></textarea><br><br>
+
+        <button type="submit">Predict Genre</button>
+    </form>
+
+    <h2>Predicted Genre:</h2>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            
+            fetch('/predict/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.genre) {
+                    document.getElementById('result').innerText = data.genre;
+                } else {
+                    document.getElementById('result').innerText = "Error: " + data.error;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

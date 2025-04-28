@@ -1,0 +1,154 @@
+{% load static %}
+<div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="bookModalLabel">Book Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img id="modalCover" src="" alt="Book cover" class="img-fluid rounded shadow" style="max-height: 300px; object-fit: cover;">
+                    </div>
+                    <div class="col-md-8">
+                        <h3 id="modalTitle" class="fw-bold mb-3"></h3>
+                        <p class="text-secondary mb-2">by <span id="modalAuthor"></span></p>
+                        
+                        <!-- Quotes Section -->
+                        <div id="quotesSection" class="mb-4" style="display: none;">
+                            <h6 class="fw-bold text-primary">Notable Quotes</h6>
+                            <div id="quotesCarousel" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    <!-- Quotes will be added by JavaScript -->
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#quotesCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#quotesCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Ratings Section -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary">Ratings & Reviews</h6>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating-stars me-2" id="modalRatingStars">
+                                    <!-- Stars will be added by JavaScript -->
+                                </div>
+                                <span id="modalAvgRating" class="fw-bold me-2"></span>
+                                <span id="modalReviewCount" class="text-muted"></span>
+                            </div>
+                            {% if user.is_authenticated %}
+                            <form id="reviewForm" class="mt-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="title" id="reviewTitle">
+                                <input type="hidden" name="author" id="reviewAuthor">
+                                <div class="mb-3">
+                                    <label class="form-label">Your Rating</label>
+                                    <div class="rating-input">
+                                        <i class="bi bi-star-fill star" data-rating="1"></i>
+                                        <i class="bi bi-star-fill star" data-rating="2"></i>
+                                        <i class="bi bi-star-fill star" data-rating="3"></i>
+                                        <i class="bi bi-star-fill star" data-rating="4"></i>
+                                        <i class="bi bi-star-fill star" data-rating="5"></i>
+                                    </div>
+                                    <input type="hidden" name="rating" id="ratingValue">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Your Review</label>
+                                    <textarea name="review_text" id="reviewText" class="form-control" rows="3" placeholder="Share your thoughts about this book..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <a href="{% url 'login' %}" class="text-decoration-none">Login</a> to rate and review this book.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary">Description</h6>
+                            <p id="modalDescription" class="text-muted"></p>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary">Buy/View</h6>
+                            <div class="d-flex gap-2">
+                                <a id="modalAmazon" href="#" target="_blank" class="btn btn-warning btn-sm d-flex align-items-center" style="font-weight:600;"><i class="bi bi-amazon me-1"></i>Amazon</a>
+                                <a id="modalBN" href="#" target="_blank" class="btn btn-success btn-sm d-flex align-items-center" style="font-weight:600;"><i class="bi bi-book me-1"></i>B&N</a>
+                                <a id="modalOpenLibrary" href="#" target="_blank" class="btn btn-primary btn-sm d-flex align-items-center" style="font-weight:600;"><i class="bi bi-journal-bookmark-fill me-1"></i>Open Library</a>
+                            </div>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <form id="saveFavoriteForm" method="post" action="{% url 'save_favorite' %}" class="mt-3">
+                            {% csrf_token %}
+                            <input type="hidden" name="fav_title" id="modalFavTitle">
+                            <input type="hidden" name="fav_author" id="modalFavAuthor">
+                            <input type="hidden" name="fav_cover_url" id="modalFavCover">
+                            <input type="hidden" name="fav_openlibrary_url" id="modalFavOpenLibrary">
+                            <button type="submit" class="btn btn-outline-info btn-sm"><i class="bi bi-bookmark-plus me-1"></i>Save to Bookshelf</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-stars {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+.rating-input {
+    display: flex;
+    gap: 0.2rem;
+}
+.rating-input .star {
+    cursor: pointer;
+    color: #dee2e6;
+    transition: color 0.2s;
+}
+.rating-input .star:hover,
+.rating-input .star.active {
+    color: #ffc107;
+}
+.quote-item {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    margin: 1rem;
+    position: relative;
+}
+.quote-item::before {
+    content: '"';
+    font-size: 4rem;
+    color: #e9ecef;
+    position: absolute;
+    top: -1rem;
+    left: 0.5rem;
+    font-family: Georgia, serif;
+}
+.quote-text {
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+    opacity: 0.5;
+}
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+}
+</style> 

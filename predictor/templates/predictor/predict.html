@@ -1,0 +1,649 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@0.2.1/open-dyslexic.min.css">
+<style>
+    .fade-in {
+        animation: fadeIn 0.8s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .genre-badge {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0.4em 1em;
+        border-radius: 1em;
+        display: inline-block;
+        margin-left: 0.5em;
+    }
+    .genre-badge.thriller { background: #0d6efd; color: #fff; }
+    .genre-badge.fantasy { background: #a78bfa; color: #fff; }
+    .genre-badge.mystery { background: #6366f1; color: #fff; }
+    .genre-badge.romance { background: #f472b6; color: #fff; }
+    .genre-badge[genre] { background: #e0e7ef; color: #22223b; }
+    .genre-badge.science-fiction { background: #38bdf8; color: #fff; }
+    .confidence-label {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #6366f1;
+        margin-bottom: 0.2em;
+        text-align: left;
+    }
+    .confidence-bar {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .genre-desc-box {
+        background: #f0f9ff;
+        border-left: 5px solid #6366f1;
+        border-radius: 0.5em;
+        margin-top: 1.5em;
+        padding: 1em 1.5em;
+        font-size: 1.08rem;
+        font-weight: 500;
+        color: #22223b;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.07);
+    }
+    .cover-img {
+        max-width: 180px;
+        max-height: 270px;
+        border-radius: 0.5em;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+        margin-bottom: 1.2em;
+        background: #fff;
+        object-fit: cover;
+    }
+    .book-info-box {
+        background: #f8fafc;
+        border-radius: 0.5em;
+        box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+        padding: 1.2em 1.5em 0.7em 1.5em;
+        margin-bottom: 1.2em;
+        font-size: 1.07rem;
+        color: #22223b;
+    }
+    .book-info-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #6366f1;
+        margin-bottom: 0.3em;
+    }
+    .book-info-author {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.2em;
+    }
+    .book-info-desc {
+        color: #64748b;
+        font-size: 1.01rem;
+    }
+    .recommend-list {
+        margin-top: 1.5em;
+        padding-left: 0;
+        list-style: none;
+    }
+    .recommend-list li {
+        background: #f8fafc;
+        border-radius: 0.5em;
+        margin-bottom: 0.7em;
+        padding: 0.7em 1.2em;
+        box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+        font-size: 1.04rem;
+        display: flex;
+        align-items: center;
+    }
+    .recommend-list .bi {
+        color: #6366f1;
+        margin-right: 0.7em;
+        font-size: 1.2rem;
+    }
+    .recommend-title {
+        font-weight: 600;
+        margin-right: 0.5em;
+    }
+    .recommend-author {
+        color: #64748b;
+        font-size: 0.98rem;
+    }
+    .author-books-list {
+        margin-top: 1.2em;
+        padding-left: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1.1em;
+    }
+    .author-books-list li {
+        background: #f3f4f6;
+        border-radius: 1em;
+        margin-bottom: 0;
+        padding: 1.2em 2em;
+        font-size: 1.18rem;
+        color: #22223b;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+        display: flex;
+        align-items: center;
+        transition: box-shadow 0.2s, background 0.2s;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+    }
+    .author-books-list li:hover {
+        background: #e0e7ff;
+        box-shadow: 0 4px 16px rgba(99,102,241,0.13);
+        color: #4338ca;
+    }
+    .author-books-list .bi {
+        color: #818cf8;
+        margin-right: 1em;
+        font-size: 1.3rem;
+    }
+    .author-books-list .fw-bold {
+        background: none;
+        box-shadow: none;
+        color: #2563eb;
+        font-size: 1.15rem;
+        margin-bottom: 0.2em;
+        padding: 0;
+        letter-spacing: 0.02em;
+    }
+    body.dark-mode .author-books-list li {
+        background: #232336;
+        color: #e0e7ef;
+    }
+    body.dark-mode .author-books-list li:hover {
+        background: #6366f1;
+        color: #fff;
+    }
+    body.dark-mode .book-info-box {
+        background: #232336;
+        color: #e0e7ef;
+    }
+    body.dark-mode .book-info-author {
+        color: #a5b4fc;
+    }
+    body.dark-mode .book-info-desc {
+        color: #cbd5e1;
+    }
+    /* Autocomplete styles */
+    .autocomplete-suggestions {
+        position: absolute;
+        z-index: 1000;
+        width: 100%;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0 0 0.5em 0.5em;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.07);
+        max-height: 220px;
+        overflow-y: auto;
+    }
+    .autocomplete-suggestion {
+        padding: 0.6em 1em;
+        cursor: pointer;
+        font-size: 1.04rem;
+        color: #22223b;
+    }
+    .autocomplete-suggestion:hover, .autocomplete-suggestion.active {
+        background: #e0e7ff;
+        color: #4338ca;
+    }
+    body.dark-mode .autocomplete-suggestions {
+        background: #232336;
+        color: #e0e7ef;
+        border-color: #6366f1;
+    }
+    body.dark-mode .autocomplete-suggestion {
+        color: #e0e7ef;
+        background: #232336;
+    }
+    body.dark-mode .autocomplete-suggestion:hover, body.dark-mode .autocomplete-suggestion.active {
+        background: #6366f1;
+        color: #fff;
+    }
+    body.dark-mode input[type="text"],
+    body.dark-mode input[type="search"],
+    body.dark-mode .form-control {
+        background: #232336 !important;
+        color: #e0e7ef !important;
+        border-color: #6366f1 !important;
+    }
+    body.dark-mode input[type="text"]::placeholder,
+    body.dark-mode input[type="search"]::placeholder,
+    body.dark-mode .form-control::placeholder {
+        color: #a5b4fc !important;
+        opacity: 1;
+    }
+    .recent-searches {
+        background: #f8fafc;
+        border-radius: 0.5em;
+        padding: 1.2em;
+        margin-top: 2em;
+        box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+    }
+    .recent-searches h5 {
+        color: #6366f1;
+        font-weight: 600;
+        margin-bottom: 1em;
+    }
+    .recent-search-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5em 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .recent-search-item:last-child {
+        border-bottom: none;
+    }
+    .recent-search-item i {
+        color: #6366f1;
+        margin-right: 0.8em;
+    }
+    .recent-search-item a {
+        color: #374151;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .recent-search-item a:hover {
+        color: #6366f1;
+    }
+    body.dark-mode .recent-searches {
+        background: #232336;
+    }
+    body.dark-mode .recent-search-item {
+        border-color: #374151;
+    }
+    body.dark-mode .recent-search-item a {
+        color: #e0e7ef;
+    }
+    body.dark-mode .recent-search-item a:hover {
+        color: #818cf8;
+    }
+</style>
+<div class="col-12 col-md-10 col-lg-8 col-xl-6">
+    <div class="d-flex justify-content-end mb-3 align-items-center">
+        {% if user.is_authenticated %}
+            <span class="me-2">Hello, {{ user.username }}!</span>
+            <a href="{% url 'bookshelf' %}" class="btn btn-outline-info btn-sm me-2">My Bookshelf</a>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">Login</a>
+            <a href="{% url 'signup' %}" class="btn btn-outline-success btn-sm ms-2">Sign Up</a>
+        {% endif %}
+    </div>
+    <div class="card p-4 shadow-lg border-0">
+        <h2 class="mb-4 text-center fw-bold" style="letter-spacing:1px;">Book Search</h2>
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            <div class="mb-3 position-relative" style="z-index:10;">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+                <div id="title-suggestions" class="autocomplete-suggestions" style="display:none;"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
+        </form>
+        {% if result %}
+            <div class="d-flex flex-column align-items-center fade-in">
+                <img src="{{ cover_url }}" alt="Book cover" class="cover-img mb-3" loading="lazy">
+            </div>
+            <div class="book-info-box mb-2">
+                <div class="book-info-title">Author:</div>
+                <div class="book-info-author">{{ book_author }}</div>
+                <div class="book-info-title mt-2">Description:
+                </div>
+                <div class="book-info-desc">{{ book_description }}</div>
+                {% if quotes %}
+                <div class="mb-4" id="mainQuotesSection">
+                    <h6 class="fw-bold text-primary">Notable Quotes</h6>
+                    <div class="row">
+                        {% for quote in quotes %}
+                        <div class="col-12 mb-2">
+                            <div class="quote-item">
+                                <p class="quote-text">{{ quote }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="mt-3 d-flex align-items-center gap-3 flex-wrap">
+                    <span class="me-2" style="font-size:1.08rem; color:#6366f1; font-weight:600;">Buy/View:</span>
+                    <a href="{{ main_buy_links.amazon }}" target="_blank" title="Amazon" class="btn btn-warning btn-sm d-flex align-items-center me-2 mb-2" style="font-weight:600;"><i class="bi bi-amazon me-1"></i>Amazon</a>
+                    <a href="{{ main_buy_links.bn }}" target="_blank" title="Barnes & Noble" class="btn btn-success btn-sm d-flex align-items-center me-2 mb-2" style="font-weight:600;"><i class="bi bi-book me-1"></i>B&N</a>
+                    <a href="{{ main_buy_links.openlibrary }}" target="_blank" title="Open Library" class="btn btn-primary btn-sm d-flex align-items-center mb-2" style="font-weight:600;"><i class="bi bi-journal-bookmark-fill me-1"></i>Open Library</a>
+                </div>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'save_favorite' %}" class="mt-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="fav_title" value="{{ form.title.value }}">
+                    <input type="hidden" name="fav_author" value="{{ book_author }}">
+                    <input type="hidden" name="fav_cover_url" value="{{ cover_url }}">
+                    <input type="hidden" name="fav_openlibrary_url" value="{{ main_buy_links.openlibrary }}">
+                    <button type="submit" class="btn btn-outline-info btn-sm mt-1"><i class="bi bi-bookmark-plus me-1"></i>Save to Bookshelf</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if author_books %}
+                <ul class="author-books-list">
+                    <li class="fw-bold text-primary"><i class="bi bi-person-lines-fill"></i>Other books by this author:</li>
+                    {% for book in author_books %}
+                        <li><i class="bi bi-dot"></i>{{ book.title }}
+                            <span class="ms-auto d-flex flex-wrap gap-2">
+                                <a href="{{ book.buy_links.amazon }}" target="_blank" title="Amazon" class="btn btn-warning btn-sm d-flex align-items-center"><i class="bi bi-amazon me-1"></i>Amazon</a>
+                                <a href="{{ book.buy_links.bn }}" target="_blank" title="Barnes & Noble" class="btn btn-success btn-sm d-flex align-items-center"><i class="bi bi-book me-1"></i>B&N</a>
+                                <a href="{{ book.buy_links.openlibrary }}" target="_blank" title="Open Library" class="btn btn-primary btn-sm d-flex align-items-center"><i class="bi bi-journal-bookmark-fill me-1"></i>Open Library</a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="text-secondary mt-2 mb-3" style="font-size:1.01rem;">No other books found for this author.</div>
+            {% endif %}
+            <div class="card mt-2 shadow border-0 fade-in">
+                <div class="card-body text-center">
+                    <h4 class="card-title mb-3">
+                        <i class="bi {{ genre_icon }} me-2" style="font-size:2rem;"></i>
+                        Genre:
+                        <span class="genre-badge {{ result.genre|lower|cut:' ' }}">{{ result.genre }}</span>
+                    </h4>
+                    <div class="confidence-label">Model Confidence</div>
+                    <div class="progress my-2" style="height: 32px; background: #e5e7eb;">
+                        <div class="progress-bar bg-success confidence-bar d-flex align-items-center justify-content-center" role="progressbar" style="width: {{ result.confidence|floatformat:0 }}%; font-size:1.1rem;" aria-valuenow="{{ result.confidence|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ result.confidence }}
+                        </div>
+                    </div>
+                    {% if result.confidence|floatformat:0 < 50 %}
+                        <div class="text-warning mt-2" style="font-size:0.98rem;">Confidence is low. Try a more detailed description for better results!</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="genre-desc-box">
+                {{ genre_description }}
+            </div>
+            {% if recommendations %}
+                <ul class="recommend-list">
+                    <li class="fw-bold text-primary"><i class="bi bi-stars"></i>More in this genre:</li>
+                    {% for book in recommendations %}
+                        <li><i class="bi bi-bookmark-heart"></i><span class="recommend-title">{{ book.title }}</span> <span class="recommend-author">by {{ book.author }}</span>
+                            <span class="ms-auto d-flex flex-wrap gap-2">
+                                <a href="{{ book.buy_links.amazon }}" target="_blank" title="Amazon" class="btn btn-warning btn-sm d-flex align-items-center"><i class="bi bi-amazon me-1"></i>Amazon</a>
+                                <a href="{{ book.buy_links.bn }}" target="_blank" title="Barnes & Noble" class="btn btn-success btn-sm d-flex align-items-center"><i class="bi bi-book me-1"></i>B&N</a>
+                                <a href="{{ book.buy_links.openlibrary }}" target="_blank" title="Open Library" class="btn btn-primary btn-sm d-flex align-items-center"><i class="bi bi-journal-bookmark-fill me-1"></i>Open Library</a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% if user.is_authenticated and recent_searches %}
+<div class="col-12 col-md-10 col-lg-8 col-xl-6 mt-4">
+    <div class="recent-searches">
+        <h5><i class="bi bi-clock-history me-2"></i>Recent Searches</h5>
+        {% for search in recent_searches %}
+        <div class="recent-search-item">
+            <i class="bi bi-search"></i>
+            <a href="{% url 'predict' %}?title={{ search.title|urlencode }}">{{ search.title }}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% include "predictor/book_modal.html" %}
+
+<script>
+// Autocomplete for book title
+const titleInput = document.getElementById('id_title');
+const suggestionsBox = document.getElementById('title-suggestions');
+let debounceTimeout = null;
+let activeIndex = -1;
+let suggestions = [];
+
+function showSuggestions(items) {
+    suggestionsBox.innerHTML = '';
+    if (items.length === 0) {
+        suggestionsBox.style.display = 'none';
+        return;
+    }
+    items.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-suggestion' + (idx === activeIndex ? ' active' : '');
+        div.textContent = item;
+        div.onclick = () => {
+            titleInput.value = item;
+            suggestionsBox.style.display = 'none';
+        };
+        suggestionsBox.appendChild(div);
+    });
+    suggestionsBox.style.display = 'block';
+}
+
+titleInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    activeIndex = -1;
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    if (query.length < 2) {
+        showSuggestions([]);
+        return;
+    }
+    debounceTimeout = setTimeout(() => {
+        fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=5`)
+            .then(res => res.json())
+            .then(data => {
+                suggestions = (data.docs || []).map(doc => doc.title).filter(Boolean);
+                showSuggestions(suggestions);
+            });
+    }, 250);
+});
+
+titleInput.addEventListener('keydown', function(e) {
+    if (!suggestions.length || suggestionsBox.style.display === 'none') return;
+    if (e.key === 'ArrowDown') {
+        activeIndex = (activeIndex + 1) % suggestions.length;
+        showSuggestions(suggestions);
+        e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+        activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+        showSuggestions(suggestions);
+        e.preventDefault();
+    } else if (e.key === 'Enter') {
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+            titleInput.value = suggestions[activeIndex];
+            suggestionsBox.style.display = 'none';
+            e.preventDefault();
+        }
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (!suggestionsBox.contains(e.target) && e.target !== titleInput) {
+        suggestionsBox.style.display = 'none';
+    }
+});
+
+// Book Modal functionality
+const bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
+const modalTitle = document.getElementById('modalTitle');
+const modalAuthor = document.getElementById('modalAuthor');
+const modalDescription = document.getElementById('modalDescription');
+const modalCover = document.getElementById('modalCover');
+const modalAmazon = document.getElementById('modalAmazon');
+const modalBN = document.getElementById('modalBN');
+const modalOpenLibrary = document.getElementById('modalOpenLibrary');
+const modalFavTitle = document.getElementById('modalFavTitle');
+const modalFavAuthor = document.getElementById('modalFavAuthor');
+const modalFavCover = document.getElementById('modalFavCover');
+const modalFavOpenLibrary = document.getElementById('modalFavOpenLibrary');
+
+function showBookDetails(title) {
+    fetch(`/get_book_details/?title=${encodeURIComponent(title)}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modalTitle.textContent = data.title;
+        modalAuthor.textContent = data.author;
+        modalDescription.textContent = data.description;
+        modalCover.src = data.cover_url;
+        modalAmazon.href = data.buy_links.amazon;
+        modalBN.href = data.buy_links.bn;
+        modalOpenLibrary.href = data.buy_links.openlibrary;
+        
+        // Set form values for saving to favorites
+        modalFavTitle.value = data.title;
+        modalFavAuthor.value = data.author;
+        modalFavCover.value = data.cover_url;
+        modalFavOpenLibrary.value = data.buy_links.openlibrary;
+        
+        // Update ratings
+        const ratingStars = document.getElementById('modalRatingStars');
+        ratingStars.innerHTML = '';
+        if (data.avg_rating) {
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                star.className = `bi bi-star${i <= data.avg_rating ? '-fill' : ''}`;
+                ratingStars.appendChild(star);
+            }
+            document.getElementById('modalAvgRating').textContent = `${data.avg_rating}/5`;
+            document.getElementById('modalReviewCount').textContent = `(${data.review_count} reviews)`;
+        } else {
+            document.getElementById('modalAvgRating').textContent = 'No ratings yet';
+            document.getElementById('modalReviewCount').textContent = '';
+        }
+        
+        // Set user's review if exists
+        if (data.user_review) {
+            updateStars(data.user_review.rating);
+            document.getElementById('reviewText').value = data.user_review.review_text || '';
+        } else {
+            updateStars(0);
+            document.getElementById('reviewText').value = '';
+        }
+        
+        // Update quotes
+        const quotesSection = document.getElementById('quotesSection');
+        const quotesCarousel = document.getElementById('quotesCarousel').querySelector('.carousel-inner');
+        quotesCarousel.innerHTML = '';
+        
+        if (data.quotes && data.quotes.length > 0) {
+            quotesSection.style.display = 'block';
+            data.quotes.forEach((quote, index) => {
+                const div = document.createElement('div');
+                div.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="quote-item">
+                        <p class="quote-text">${quote}</p>
+                    </div>
+                `;
+                quotesCarousel.appendChild(div);
+            });
+        } else {
+            quotesSection.style.display = 'none';
+        }
+        
+        bookModal.show();
+    })
+    .catch(error => {
+        console.error('Error fetching book details:', error);
+        alert('Error loading book details. Please try again.');
+    });
+}
+
+// Add click handlers to all book links
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle recent searches
+    document.querySelectorAll('.recent-search-item a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showBookDetails(this.textContent);
+        });
+    });
+    
+    // Handle author books
+    document.querySelectorAll('.author-books-list li a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showBookDetails(this.textContent);
+        });
+    });
+    
+    // Handle recommendations
+    document.querySelectorAll('.recommend-list li a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showBookDetails(this.textContent);
+        });
+    });
+});
+
+// Rating functionality
+function updateStars(rating) {
+    const stars = document.querySelectorAll('.rating-input .star');
+    stars.forEach(star => {
+        const starRating = parseInt(star.dataset.rating);
+        star.classList.toggle('active', starRating <= rating);
+    });
+    document.getElementById('ratingValue').value = rating;
+}
+
+document.querySelectorAll('.rating-input .star').forEach(star => {
+    star.addEventListener('click', () => {
+        const rating = parseInt(star.dataset.rating);
+        updateStars(rating);
+    });
+    
+    star.addEventListener('mouseover', () => {
+        const rating = parseInt(star.dataset.rating);
+        const stars = document.querySelectorAll('.rating-input .star');
+        stars.forEach(s => {
+            const sRating = parseInt(s.dataset.rating);
+            s.classList.toggle('active', sRating <= rating);
+        });
+    });
+    
+    star.addEventListener('mouseout', () => {
+        const currentRating = document.getElementById('ratingValue').value;
+        updateStars(parseInt(currentRating) || 0);
+    });
+});
+
+// Review form submission
+document.getElementById('reviewForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    formData.append('title', document.getElementById('modalTitle').textContent);
+    formData.append('author', document.getElementById('modalAuthor').textContent);
+    
+    fetch('/submit_review/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh the modal to show updated ratings
+            showBookDetails(document.getElementById('modalTitle').textContent);
+        } else {
+            alert('Error submitting review. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting review. Please try again.');
+    });
+});
+</script>
+{% endblock %}
+
